@@ -25,13 +25,9 @@ RUN php -r 'readfile("https://getcomposer.org/installer");' > composer-setup.php
   && rm -f composer-setup.php \
   && chown www-data:www-data /var/www
 
-# add php info to virtual dir
-RUN mkdir -p /var/www/html/source
-COPY ./files/source/info.php /var/www/html/source/info.php
 
 # apache stuff
 RUN /usr/sbin/a2enmod rewrite && /usr/sbin/a2enmod headers && /usr/sbin/a2enmod expires && /usr/sbin/a2enmod ssl
 COPY ./files/000-default.conf /etc/apache2/sites-available/000-default.conf
 
-ENTRYPOINT ["/entrypoint.sh"]
 CMD ["apache2-foreground"]
