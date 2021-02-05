@@ -1,0 +1,37 @@
+FROM php:7.3-apache
+
+MAINTAINER module@proudcommerce.com
+
+# timezone / date   
+RUN echo "Europe/Berlin" > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata
+
+# install packages
+RUN apt-get update -y && \
+  apt-get install -y --no-install-recommends \
+  less vim wget unzip rsync git default-mysql-client libzip-dev ssl-cert \
+  libcurl4-openssl-dev libfreetype6 libjpeg62-turbo libpng-dev libjpeg-dev libxml2-dev libxpm4 && \
+  apt-get clean && \
+  apt-get autoremove -y && \
+  rm -rf /var/lib/apt/lists/* && \
+  echo "export TERM=xterm" >> /root/.bashrc
+
+# install php extensions
+RUN docker-php-ext-configure gd --with-jpeg-dir=/usr/local/ && \
+  docker-php-ext-install -j$(nproc) zip bcmath soap pdo_mysql gd
+
+# composer stuff
+RUN php -r 'readfile("https://getcomposer.org/installer");' > composer-setup.php \
+  && php composer-setup.php --1 --install-dir=/usr/local/bin --filename=composer \
+  && rm -f composer-setup.php \
+  && chown www-data:www-data /var/www
+
+# add php info to virtual dir
+RUN mkdir -p /var/www/html/source
+COPY ./files/source/info.php /var/www/html/source/info.php
+
+# apache stuff
+RUN /usr/sbin/a2enmod rewrite && /usr/sbin/a2enmod headers && /usr/sbin/a2enmod expires && /usr/sbin/a2enmod ssl
+COPY ./files/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["apache2-foreground"]
