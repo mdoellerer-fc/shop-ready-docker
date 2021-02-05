@@ -20,7 +20,7 @@ docker-compose build
 # fire up container
 docker-compose up
 ```
-4. Go to your browser and type http://localhost/info.php
+
 
 
 ## Configuration
