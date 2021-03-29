@@ -19,6 +19,17 @@ RUN apt-get update -y && \
 RUN docker-php-ext-configure gd --with-jpeg-dir=/usr/local/ && \
   docker-php-ext-install -j$(nproc) zip bcmath soap pdo_mysql gd
 
+# xdebug
+RUN yes | pecl install xdebug \
+  && echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini \
+  && echo "[XDebug]" >> /usr/local/etc/php/conf.d/xdebug.ini \
+  && echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/xdebug.ini \
+  && echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/xdebug.ini \
+  && echo "xdebug.client_port=9000" >> /usr/local/etc/php/conf.d/xdebug.ini \
+  && echo "xdebug.remote_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+  && echo "xdebug.discover_client_host=127.0.0.1" >> /usr/local/etc/php/conf.d/xdebug.ini \
+  && echo "xdebug.idekey=xdebug" >> /usr/local/etc/php/conf.d/xdebug.ini
+
 # composer stuff
 RUN php -r 'readfile("https://getcomposer.org/installer");' > composer-setup.php \
   && php composer-setup.php --1 --install-dir=/usr/local/bin --filename=composer \
